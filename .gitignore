@@ -2,4 +2,4 @@ output
 logs
 .idea
 *.zip
-_pycache_/
+__pycache__
