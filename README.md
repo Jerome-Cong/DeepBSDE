@@ -1,4 +1,29 @@
-# [Deep BSDE Solver](https://doi.org/10.1073/pnas.1718942115) in TensorFlow (2.0)
+<!--
+ * @Description: 
+ * @Version: 1.0
+ * @Autor: Shijie Cong
+ * @Date: 2024-01-05 14:16:31
+ * @LastEditors: Shijie Cong
+ * @LastEditTime: 2024-01-09 14:06:29
+-->
+# [Deep BSDE Solver](https://doi.org/10.1073/pnas.1718942115) in Pytorch
+
+## Usage
+
+- I recommend doing installation in a virtual environment such as [Anaconda](https://www.anaconda.com/), Python 3.9 is used in this implementation.
+- Install [PyTorch](https://pytorch.org/get-started/locally/)
+
+```bash
+conda install cudatoolkit=11.8
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
+
+- Clone this repository
+
+```bash
+git clone https://github.com/Jerome-Cong/DeepBSDE.git
+pip3 install -e .
+```
 
 
 ## Training
@@ -38,14 +63,8 @@ in `equation.py` and define the new problem. Note that the generator function
 and terminal function should be TensorFlow operations while the sample function
 can be python operation. A proper config is needed as well.
 
-
-## Dependencies
-
-* [TensorFlow >=2.0](https://www.tensorflow.org/)
-
-Note: an old version of the deep BSDE solver compatiable with TensorFlow 1.12 and Python 2 can be found in the commit 9d4e332.
-
 ## Reference
+
 [1] Han, J., Jentzen, A., and E, W. Overcoming the curse of dimensionality: Solving high-dimensional partial differential equations using deep learning,
 <em>Proceedings of the National Academy of Sciences</em>, 115(34), 8505-8510 (2018). [[journal]](https://doi.org/10.1073/pnas.1718942115) [[arXiv]](https://arxiv.org/abs/1707.02568) <br />
 [2] E, W., Han, J., and Jentzen, A. Deep learning-based numerical methods for high-dimensional parabolic partial differential equations and backward stochastic differential equations,
