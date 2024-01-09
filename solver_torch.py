@@ -4,7 +4,7 @@ Version: 1.0
 Autor: Shijie Cong
 Date: 2024-01-08 14:43:42
 LastEditors: Shijie Cong
-LastEditTime: 2024-01-09 21:55:16
+LastEditTime: 2024-01-09 22:01:08
 '''
 import logging
 import time
@@ -57,7 +57,7 @@ class NonsharedModel(nn.Module):
     def forward(self, inputs):
         dw, x = inputs
         time_stamp = torch.arange(self.eqn_config.num_time_interval) * self.bsde.delta_t
-        
+        all_one_vec = torch.ones()
         
         
 class BSDESolver(object):
