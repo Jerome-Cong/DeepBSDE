@@ -4,7 +4,7 @@ Version: 1.0
 Autor: Shijie Cong
 Date: 2024-01-08 14:43:42
 LastEditors: Shijie Cong
-LastEditTime: 2024-01-09 22:01:08
+LastEditTime: 2024-01-10 14:18:40
 '''
 import logging
 import time
@@ -57,7 +57,19 @@ class NonsharedModel(nn.Module):
     def forward(self, inputs):
         dw, x = inputs
         time_stamp = torch.arange(self.eqn_config.num_time_interval) * self.bsde.delta_t
-        all_one_vec = torch.ones()
+        all_one_vec = torch.ones([dw.size()[0], 1], dtype=torch.float32)
+        y = all_one_vec * self.y_init
+        z = torch.matmul(all_one_vec, self.z_init)
+        
+        for t in range(0, self.bsde.num_time_interval - 1):
+            y = y - self.bsde.delta_t * (self.bsde.f_torch(time_stamp[t], x[:, :, t], y, z)) + \
+                torch.sum(z * dw[:, :, t], 1, keepdim=True)
+            z = self.subnet[t](x[:, :, t + 1]) / self.bsde.dim  # ??? why divide by dim
+        # terminal time
+        y = y - self.bsde.delta_t * self.bsde.f_torch(time_stamp[-1], x[:, :, -2], y, z) + \
+            torch.sum(z * dw[:, :, -1], 1, keepdim=True)
+            
+        return y
         
         
 class BSDESolver(object):
@@ -69,3 +81,23 @@ class BSDESolver(object):
         self.model = NonsharedModel(config, bsde)
         self.y_init = self.model.y_init
         
+        init_lr = self.net_config.lr_values[0]
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=init_lr)
+        self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=self.net_config.lr_boundaries,
+                                                              verbose=self.net_config.verbose)
+    
+    def train(self):
+        start_time = time.time()
+        training_history = []
+        valid_data = self.bsde.sample(self.net_config.valid_size)
+        
+        # sgd iteration
+        for step in range(self.net_config.num_iterations+1):
+            if step % self.net_config.logging_frequency == 0:
+                
+                loss = self.loss_fn(valid_data)
+                valid_error = self.valid_fn(valid_data)
+                elapsed_time = time.time() - start_time
+                training_history.append([step, loss, valid_error, elapsed_time])
+                logging.info("step: %5u,    loss: %.4e,    valid_error: %.4e,   elapsed_time: %3u" %
+                             (step, loss, valid_error, elapsed_time))
