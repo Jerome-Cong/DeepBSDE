@@ -4,7 +4,7 @@ Version: 1.0
 Autor: Shijie Cong
 Date: 2024-01-08 14:43:42
 LastEditors: Shijie Cong
-LastEditTime: 2024-01-15 16:32:43
+LastEditTime: 2024-01-15 16:53:33
 '''
 import logging
 import time
@@ -49,8 +49,10 @@ class NonsharedModel(nn.Module):
         self.bsde = bsde
         self.y_init = torch.empty((1), dtype=torch.float32)
         self.y_init.uniform_(self.net_config.y_init_range[0], self.net_config.y_init_range[1])
+        self.y_init.requires_grad = True
         self.z_init = torch.empty((1, self.eqn_config.dim), dtype=torch.float32)
         self.z_init.uniform_(-.1, .1)
+        self.z_init.requires_grad = True
         
         self.subnet = [FeedForwardSubNet(config) for _ in range(self.bsde.num_time_interval - 1)]
         
