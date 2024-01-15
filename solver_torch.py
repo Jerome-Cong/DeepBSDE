@@ -4,7 +4,7 @@ Version: 1.0
 Autor: Shijie Cong
 Date: 2024-01-08 14:43:42
 LastEditors: Shijie Cong
-LastEditTime: 2024-01-10 14:18:40
+LastEditTime: 2024-01-15 16:32:43
 '''
 import logging
 import time
@@ -96,8 +96,43 @@ class BSDESolver(object):
             if step % self.net_config.logging_frequency == 0:
                 
                 loss = self.loss_fn(valid_data)
-                valid_error = self.valid_fn(valid_data)
+                y_init = self.y_init.numpy()[0]
                 elapsed_time = time.time() - start_time
-                training_history.append([step, loss, valid_error, elapsed_time])
-                logging.info("step: %5u,    loss: %.4e,    valid_error: %.4e,   elapsed_time: %3u" %
-                             (step, loss, valid_error, elapsed_time))
+                training_history.append([step, loss, y_init, elapsed_time])
+                if self.net_config.verbose:
+                    logging.info("step: %5u,    loss: %.4e,    valid_error: %.4e,   elapsed_time: %3u" %
+                                 (step, loss, y_init, elapsed_time))
+            self.train_step(self.bsde.sample(self.net_config.batch_size))
+        
+        return np.array(training_history)
+                
+    # raw loss fn            
+    def loss_fn(self, inputs):
+        dw, x = inputs
+        y_terminal = self.bsde.g_torch(self.bsde.total_time, x[:, :, -1])
+        y_pred = self.model(inputs)
+        delta = y_pred - y_terminal
+        loss = torch.mean(torch.where(torch.abs(delta) < DELTA_CLIP, torch.square(delta),
+                                      2 * DELTA_CLIP * torch.abs(delta) - DELTA_CLIP ** 2))
+        # loss = torch.mean(torch.square(y_pred - y_terminal))
+        
+        
+        return loss
+    
+    # def grad(self, inputs):
+    #     dw, x = inputs
+    #     y_terminal = self.bsde.g_torch(self.bsde.total_time, x[:, :, -1])
+    #     y_pred = self.model(inputs)
+    #     loss = torch.mean(torch.square(y_pred - y_terminal))
+    #     loss.backward()
+        
+    #     return loss
+    
+    def train_step(self, inputs):
+        self.optimizer.zero_grad()
+        loss = self.loss_fn(inputs)
+        loss.backward()
+        self.optimizer.step()
+        self.scheduler.step()
+        
+        return loss
