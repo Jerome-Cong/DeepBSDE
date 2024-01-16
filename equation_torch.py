@@ -4,7 +4,7 @@ Version: 1.0
 Autor: Shijie Cong
 Date: 2024-01-08 14:43:16
 LastEditors: Shijie Cong
-LastEditTime: 2024-01-09 14:57:09
+LastEditTime: 2024-01-16 10:34:58
 '''
 import numpy as np
 import torch
@@ -51,13 +51,12 @@ class HJBLQ(Equation):
         x_sample = np.zeros([num_sample, self.dim, self.num_time_interval + 1])
         x_sample[:, :, 0] = np.ones([num_sample, self.dim]) * self.x_init
         for i in range(self.num_time_interval):
-            x_sample[:, :, i + 1] = x_sample[:, :, i] + self.lambd * x_sample[:, :, i] * self.delta_t + \
-                                    self.sigma * dw_sample[:, :, i]
+            x_sample[:, :, i + 1] = x_sample[:, :, i] + self.sigma * dw_sample[:, :, i]
         
-        return dw_sample, x_sample
+        return torch.tensor(dw_sample, dtype=torch.float32), torch.tensor(x_sample, dtype=torch.float32)
     
     def f_torch(self, t, x, y, z):
-        return -0.5 * self.lambd * torch.sum(torch.square(z), 1, keepdim=True)
+        return -self.lambd * torch.sum(torch.square(z), 1, keepdim=True) / 2
     
     def g_torch(self, t, x):
-        return torch.log(0.5 * (1 + torch.sum(torch.square(x), 1, keepdim=True)))
+        return torch.log((1 + torch.sum(torch.square(x), 1, keepdim=True)) / 2)
