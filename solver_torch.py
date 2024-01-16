@@ -4,7 +4,7 @@ Version: 1.0
 Autor: Shijie Cong
 Date: 2024-01-08 14:43:42
 LastEditors: Shijie Cong
-LastEditTime: 2024-01-16 17:01:29
+LastEditTime: 2024-01-16 17:35:22
 '''
 import logging
 import time
@@ -61,11 +61,9 @@ class NonsharedModel(nn.Module):
         self.subnet = nn.ModuleList()
         for _ in range(self.bsde.num_time_interval - 1):
             self.subnet.append(FeedForwardSubNet(config))
-        # self.subnet = [FeedForwardSubNet(config) for _ in range(self.bsde.num_time_interval - 1)]
         
     def forward(self, inputs):
         dw, x = inputs
-        # print('dw size: ', type(dw))
         time_stamp = torch.arange(self.eqn_config.num_time_interval) * self.bsde.delta_t
         all_one_vec = torch.ones([dw.size()[0], 1], dtype=torch.float32)
         y = all_one_vec * self.y_init
@@ -123,9 +121,7 @@ class BSDESolver(object):
         delta = y_pred - y_terminal
         loss = torch.mean(torch.where(torch.abs(delta) < DELTA_CLIP, torch.square(delta),
                                       2 * DELTA_CLIP * torch.abs(delta) - DELTA_CLIP ** 2))
-        # loss = torch.mean(torch.square(y_pred - y_terminal))
-        # print('loss requires grad: ', loss.requires_grad)
-        
+        # loss = torch.mean(torch.square(y_pred - y_terminal))        
         
         return loss
     
@@ -134,10 +130,7 @@ class BSDESolver(object):
         self.optimizer.zero_grad()
         loss = self.loss_fn(inputs)
         loss.backward()
-        # print('Y0 grad: ', self.model.y_init.grad)
-        # print('Y0 before update: ', self.model.y_init)
         self.optimizer.step()
-        # print('Y0 after update: ', self.model.y_init)
         # self.scheduler.step()
         
         return loss
