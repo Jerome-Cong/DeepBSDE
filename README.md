@@ -4,9 +4,9 @@
  * @Autor: Shijie Cong
  * @Date: 2024-01-05 14:16:31
  * @LastEditors: Shijie Cong
- * @LastEditTime: 2024-01-09 14:06:29
+ * @LastEditTime: 2024-01-16 17:38:28
 -->
-# [Deep BSDE Solver](https://doi.org/10.1073/pnas.1718942115) in Pytorch
+# [Deep BSDE Solver](https://doi.org/10.1073/pnas.1718942115) in TensorFlow/Pytorch
 
 ## Usage
 
@@ -28,8 +28,16 @@ pip3 install -e .
 
 ## Training
 
-```
+- With TensorFlow:
+
+```bash
 python main.py --config_path=configs/hjb_lq_d100.json
+```
+
+- With PyTorch:
+
+```bash
+python main_torch.py --config_path=configs/hjb_lq_d100.json
 ```
 
 Command-line flags:
