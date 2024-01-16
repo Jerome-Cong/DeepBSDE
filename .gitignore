@@ -3,3 +3,4 @@ logs
 .idea
 *.zip
 __pycache__
+*.ipynb
