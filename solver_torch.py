@@ -4,7 +4,7 @@ Version: 1.0
 Autor: Shijie Cong
 Date: 2024-01-08 14:43:42
 LastEditors: Shijie Cong
-LastEditTime: 2024-01-16 17:35:22
+LastEditTime: 2024-01-25 14:40:28
 '''
 import logging
 import time
@@ -21,10 +21,10 @@ class FeedForwardSubNet(nn.Module):
         dim = config.eqn_config.dim
         num_hiddens = config.net_config.num_hiddens
         self.bn_layers = nn.ModuleList()
-        self.bn_layers.append(nn.BatchNorm1d(dim, eps=1e-6, momentum=0.1))
+        self.bn_layers.append(nn.BatchNorm1d(dim, eps=1e-6, momentum=0.01))
         for i in range(len(num_hiddens)):
-            self.bn_layers.append(nn.BatchNorm1d(num_hiddens[i], eps=1e-6, momentum=0.1))
-        self.bn_layers.append(nn.BatchNorm1d(dim, eps=1e-6, momentum=0.1))
+            self.bn_layers.append(nn.BatchNorm1d(num_hiddens[i], eps=1e-6, momentum=0.01))
+        self.bn_layers.append(nn.BatchNorm1d(dim, eps=1e-6, momentum=0.01))
         self.dense_layers = nn.ModuleList()
         self.dense_layers.append(nn.Linear(dim, num_hiddens[0]))
         for i in range(len(num_hiddens) - 1):
@@ -91,8 +91,8 @@ class BSDESolver(object):
         
         init_lr = self.net_config.lr_values[0]
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=init_lr)
-        # self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=self.net_config.lr_boundaries,
-                                                            #   verbose=self.net_config.verbose)
+        self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=self.net_config.lr_boundaries,
+                                                              verbose=False)
     
     def train(self):
         start_time = time.time()
