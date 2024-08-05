@@ -47,6 +47,36 @@ class HJBLQ(Equation):
 
     def g_tf(self, t, x):
         return tf.math.log((1 + tf.reduce_sum(tf.square(x), 1, keepdims=True)) / 2)
+    
+
+class HJBLQR(Equation):
+    def __init__(self, eqn_config):
+        super(HJBLQR, self).__init__(eqn_config)
+        self.A = np.array([[0., 1.],[0., 0.]])
+        self.B = np.array([[0.], [1.]])
+        self.Q = np.diag([1., 1.])
+        self.R = np.array([[1.]])
+        
+        self.x_range = eqn_config.x_range
+        self.a_range = eqn_config.a_range
+        self.sigma = np.sqrt(1.)
+        self.ckpt = 0.
+        self.tar_s = np.array([self.ckpt, 0.])
+        
+    def sample(self, num_sample, seed=None)
+        if seed is not None:
+            np.random.seed(seed)
+        dw_sample = np.random.normal(size=[num_sample, self.dim, self.num_time_interval]) * self.sqrt_delta_t
+        x_sample = np.zeros([num_sample, self.dim, self.num_time_interval + 1])
+        x_sample[:,:,0] = np.random.uniform(low=self.x_range[0], high=self.x_range[1], size=[num_sample])
+        u_sample = np.zeros(shape=[num_sample, 1, self.num_time_interval])
+        h_sample = np.zeros(shape=[num_sample, 1, self.num_time_interval])
+        for i in range(self.num_time_interval):
+            u_sample[:,:,i] = np.random.uniform(low=self.a_range[0], high=self.a_range[1], size=[num_sample, 1])
+            x_sample[:,:,i+1] = x_sample[:,:,i] + (x_sample[:,:,i]@self.A.T+u_sample[:,:,i]@self.B.T)*self.delta_t + self.sigma * dw_sample[:,:,i]
+            h_sample[:,:,i] = np.sum((x_sample[:,:,i]-self.tar_s)@self.Q.T * (x_sample[:,:,i]-self.tar_s), 1, keepdims=True)
+        
+        return dw_sample, x_sample, u_sample, h_sample
 
 
 class AllenCahn(Equation):
