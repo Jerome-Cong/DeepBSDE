@@ -5,15 +5,16 @@
     "total_time": 8.0,
     "dim": 2,
     "num_time_interval": 80,
-    "x_range": [-10, 10],
-    "a_range": [0, 10]
+    "x_range": [-5, 15],
+    "a_range": [0, 10],
+    "cuda_device": 0
   },
   "net_config": {
     "y_init_range": [0, 1],
     "num_hiddens": [32, 32],
     "lr_values": [1e-2, 1e-3],
-    "lr_boundaries": [1000],
-    "num_iterations": 4000,
+    "lr_boundaries": [2000],
+    "num_iterations": 5000,
     "batch_size": 256,
     "valid_size": 20000,
     "logging_frequency": 100,

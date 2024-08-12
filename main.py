@@ -46,7 +46,7 @@ def main(argv):
     absl_logging.set_verbosity('info')
 
     logging.info('Begin to solve %s ' % config.eqn_config.eqn_name)
-    bsde_solver = BSDESolver(config, bsde)
+    bsde_solver = BSDESolver(config, bsde, save_path=FLAGS.log_dir)
     training_history = bsde_solver.train()
     if bsde.y_init:
         logging.info('Y0_true: %.4e' % bsde.y_init)

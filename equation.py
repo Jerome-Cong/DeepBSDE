@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import torch
 
 
 class Equation(object):
@@ -12,6 +13,8 @@ class Equation(object):
         self.delta_t = self.total_time / self.num_time_interval
         self.sqrt_delta_t = np.sqrt(self.delta_t)
         self.y_init = None
+        
+        self.device = torch.device(f'cuda:{eqn_config.cuda_device}' if torch.cuda.is_available() else 'cpu')
 
     def sample(self, num_sample):
         """Sample forward SDE."""
@@ -60,15 +63,15 @@ class HJBLQR(Equation):
         self.x_range = eqn_config.x_range
         self.a_range = eqn_config.a_range
         self.sigma = np.sqrt(1.)
-        self.ckpt = 0.
+        self.ckpt = 5.
         self.tar_s = np.array([self.ckpt, 0.])
         
-    def sample(self, num_sample, seed=None)
+    def sample(self, num_sample, seed=None, lqr=False, value_model=None):
         if seed is not None:
             np.random.seed(seed)
         dw_sample = np.random.normal(size=[num_sample, self.dim, self.num_time_interval]) * self.sqrt_delta_t
         x_sample = np.zeros([num_sample, self.dim, self.num_time_interval + 1])
-        x_sample[:,:,0] = np.random.uniform(low=self.x_range[0], high=self.x_range[1], size=[num_sample])
+        x_sample[:,0,0] = np.random.uniform(low=self.x_range[0], high=self.x_range[1], size=[num_sample])
         u_sample = np.zeros(shape=[num_sample, 1, self.num_time_interval])
         h_sample = np.zeros(shape=[num_sample, 1, self.num_time_interval])
         for i in range(self.num_time_interval):
@@ -77,7 +80,17 @@ class HJBLQR(Equation):
             h_sample[:,:,i] = np.sum((x_sample[:,:,i]-self.tar_s)@self.Q.T * (x_sample[:,:,i]-self.tar_s), 1, keepdims=True)
         
         return dw_sample, x_sample, u_sample, h_sample
+    
+    def f_tf(self, x, u, h_off, z):
+        prod_z = tf.reduce_sum(z @self.B * u, 1, keepdims=True)
+        h = h_off - 0.25*tf.reduce_sum((z@self.B)@np.linalg.inv(self.R)* (z @ self.B), 1, keepdims=True)
+        
+        return prod_z - h
 
+    def g_tf(self, x):
+        
+        v_t = tf.reduce_sum((x-self.tar_s)@self.Q.T * (x-self.tar_s),1,keepdims=True)
+        return v_t
 
 class AllenCahn(Equation):
     """Allen-Cahn equation in PNAS paper doi.org/10.1073/pnas.1718942115"""
